@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CutFileMp3 - Premium Audio Splitter</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+
+<body>
+    <div class="app-container">
+        <header>
+            <h1>CutFileMp3</h1>
+            <p>Advanced Audio Segmentation Tool</p>
+        </header>
+
+        <main>
+            <!-- Step 1: File Selection -->
+            <section class="card" id="file-section">
+                <h2>1. Select Input File</h2>
+                <div class="input-group">
+                    <input type="text" id="input-file-path" placeholder="Select MP3 file..." readonly>
+                    <button id="browse-file-btn" class="btn secondary">Browse</button>
+                </div>
+                <div id="file-info" class="info-text hidden">Duration: <span id="file-duration">00:00:00</span></div>
+            </section>
+
+            <!-- Step 2: Configuration -->
+            <section class="card" id="config-section">
+                <h2>2. Configuration</h2>
+                <div class="config-row">
+                    <div class="input-wrapper">
+                        <label>Segment Length (HH:MM:SS or seconds)</label>
+                        <input type="text" id="segment-length" placeholder="00:00:00" value="02:00:00">
+                    </div>
+                    <div class="checkbox-wrapper">
+                        <input type="checkbox" id="keep-locked-cb" checked>
+                        <label for="keep-locked-cb">Keep Locked</label>
+                    </div>
+                    <button id="generate-segments-btn" class="btn primary" disabled>Apply / Reset</button>
+                </div>
+            </section>
+
+            <!-- Step 3: Segments Editor -->
+            <section class="card full-height" id="editor-section">
+                <div class="section-header">
+                    <h2>3. Segments</h2>
+                    <div class="actions">
+                        <button id="add-segment-btn" class="btn small">Add Segment</button>
+                        <button id="clear-segments-btn" class="btn small danger">Clear All</button>
+                    </div>
+                </div>
+
+                <div class="segments-header">
+                    <span class="col-idx">#</span>
+                    <span class="col-time">Start</span>
+                    <span class="col-shift">Shift (min)</span>
+                    <span class="col-shift-s">Shift (s)</span>
+                    <span class="col-time">End</span>
+                    <span class="col-lock">Lock</span>
+
+                    <span class="col-duration">Duration</span>
+                    <span class="col-name">Output Name</span>
+                    <span class="col-del"></span>
+                </div>
+                <div id="segments-list" class="segments-list">
+                    <!-- Segments will be injected here -->
+                    <div class="empty-state">No segments generated yet.</div>
+                </div>
+            </section>
+
+            <!-- Step 4: Output & Export -->
+            <section class="card" id="export-section">
+                <h2>4. Export</h2>
+                <div class="input-group">
+                    <input type="text" id="output-folder-path" placeholder="Select output folder..." readonly>
+                    <button id="browse-folder-btn" class="btn secondary">Browse</button>
+                </div>
+                <div class="export-actions">
+
+                    <button id="export-zip-btn" class="btn secondary big" disabled>Download ZIP</button>
+                    <button id="export-btn" class="btn success big" disabled>Export & Cut Files</button>
+                </div>
+                <div id="export-status" class="status-text"></div>
+            </section>
+        </main>
+    </div>
+
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+
+</html>
