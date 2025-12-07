@@ -186,8 +186,9 @@ function addSegment() {
         start: start,
         end: end,
         locked: false,
-        outputName: `segment_${(state.segments.length + 1).toString().padStart(2, '0')}`
+        outputName: `segment_auto` // Temp, will be renumbered
     });
+    renumberSegments();
     renderSegments();
 }
 
@@ -261,6 +262,7 @@ function attachListeners() {
             state.segments.splice(idx, 1);
             // If we delete, we might create a gap. 
             // For now, just render. User can manually adjust or regenerate.
+            renumberSegments();
             renderSegments();
         });
     });
@@ -464,6 +466,28 @@ function cascadeFrom(idx) {
     // Remove old ones
     const removeCount = limitIdx - (idx + 1);
     state.segments.splice(idx + 1, removeCount, ...newSegs);
+
+    // Renumber segments to ensure consistent naming
+    renumberSegments();
+}
+
+function renumberSegments() {
+    let autoIdx = 1;
+    state.segments.forEach(seg => {
+        // If segment is auto-generated (not locked), we enforce the naming convention
+        if (!seg.locked) {
+            // Find the first available index
+            // Actually, simply effectively counting up is usually what users want for "Auto"
+            // pattern: segment_01, segment_02, ...
+
+            // However, we must respect existing names if they were manually renamed?
+            // The constraint "segment_auto_..." suggests we should only target those or target all unlocked.
+            // Let's target all unlocked to force the "stt index" pattern the user wants.
+
+            seg.outputName = `segment_${autoIdx.toString().padStart(2, '0')}`;
+        }
+        autoIdx++;
+    });
 }
 
 // Audio & Preview
