@@ -1,6 +1,23 @@
-# MP3 Splitter Tool
+# CutFileMp3 - MP3 Splitter Tool
 
-A simple command-line tool to split MP3 files into equal-length segments using `ffmpeg`.
+A modern web-based MP3 splitter with an intuitive interface for precise audio segmentation.
+
+## 🚀 Quick Start (Recommended)
+
+### Cách Nhanh Nhất
+1. **Double-click** vào file `start_cutfile.bat`
+2. Trình duyệt sẽ tự động mở tại `http://127.0.0.1:5000`
+3. Bắt đầu sử dụng ngay!
+
+### Tạo Shortcut Trên Desktop
+1. Click phải vào `start_cutfile.bat`
+2. Chọn **"Send to"** → **"Desktop (create shortcut)"**
+3. Giờ bạn có thể khởi động từ Desktop!
+
+### Hoặc Chạy Thủ Công
+```bash
+python app.py
+```
 
 ## Prerequisites
 
