@@ -90,6 +90,10 @@ async function loadFileInfo() {
             els.fileDuration.textContent = formatTime(state.duration);
             els.fileInfo.classList.remove('hidden');
             els.generateBtn.disabled = false;
+
+            // Reset segments when a new file is selected
+            state.segments = [];
+            renderSegments();
         }
     } catch (err) {
         console.error(err);
