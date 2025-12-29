@@ -156,6 +156,128 @@ def split_file():
 
     return jsonify({'success': True, 'created': results, 'errors': errors, 'zipPath': zip_path})
 
+@app.route('/api/list-mp3-files', methods=['POST'])
+def list_mp3_files():
+    """List all MP3 files in a folder with metadata"""
+    data = request.json
+    folder_path = data.get('folderPath')
+    
+    if not folder_path or not os.path.exists(folder_path):
+        return jsonify({'error': 'Folder not found'}), 404
+    
+    if not os.path.isdir(folder_path):
+        return jsonify({'error': 'Path is not a directory'}), 400
+    
+    mp3_files = []
+    startupinfo = None
+    if os.name == 'nt':
+        startupinfo = subprocess.STARTUPINFO()
+        startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+    
+    try:
+        # Get all MP3 files in the folder
+        for filename in sorted(os.listdir(folder_path)):
+            if filename.lower().endswith('.mp3'):
+                file_path = os.path.join(folder_path, filename)
+                try:
+                    # Get duration
+                    duration = get_duration(file_path)
+                    # Get file size
+                    size = os.path.getsize(file_path)
+                    
+                    mp3_files.append({
+                        'filename': filename,
+                        'path': file_path,
+                        'duration': duration,
+                        'size': size
+                    })
+                except Exception as e:
+                    print(f"Error processing {filename}: {e}")
+                    continue
+        
+        return jsonify({'files': mp3_files})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/join-mp3', methods=['POST'])
+def join_mp3():
+    """Join multiple MP3 files into a single output file"""
+    data = request.json
+    file_paths = data.get('filePaths')
+    output_path = data.get('outputPath')
+    
+    if not file_paths or len(file_paths) == 0:
+        return jsonify({'error': 'No files provided'}), 400
+    
+    if not output_path:
+        return jsonify({'error': 'Output path not specified'}), 400
+    
+    # Verify all input files exist
+    for file_path in file_paths:
+        if not os.path.exists(file_path):
+            return jsonify({'error': f'File not found: {file_path}'}), 404
+    
+    # Create a temporary file list for FFmpeg concat
+    temp_list_path = os.path.join(os.path.dirname(output_path), 'temp_filelist.txt')
+    
+    try:
+        # Write file list
+        with open(temp_list_path, 'w', encoding='utf-8') as f:
+            for file_path in file_paths:
+                # Escape single quotes and use absolute paths
+                escaped_path = file_path.replace("'", "'\\''")
+                f.write(f"file '{escaped_path}'\n")
+        
+        # Ensure output has .mp3 extension
+        if not output_path.lower().endswith('.mp3'):
+            output_path += '.mp3'
+        
+        # Run FFmpeg concat
+        startupinfo = None
+        if os.name == 'nt':
+            startupinfo = subprocess.STARTUPINFO()
+            startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+        
+        cmd = [
+            'ffmpeg',
+            '-y',
+            '-f', 'concat',
+            '-safe', '0',
+            '-i', temp_list_path,
+            '-c', 'copy',
+            output_path
+        ]
+        
+        result = subprocess.run(
+            cmd,
+            capture_output=True,
+            text=True,
+            startupinfo=startupinfo
+        )
+        
+        # Clean up temp file
+        if os.path.exists(temp_list_path):
+            os.remove(temp_list_path)
+        
+        if result.returncode != 0:
+            error_msg = result.stderr if result.stderr else 'Unknown error'
+            return jsonify({'error': f'FFmpeg error: {error_msg}'}), 500
+        
+        if not os.path.exists(output_path):
+            return jsonify({'error': 'Output file was not created'}), 500
+        
+        return jsonify({
+            'success': True,
+            'outputPath': output_path,
+            'message': f'Successfully joined {len(file_paths)} files'
+        })
+        
+    except Exception as e:
+        # Clean up temp file on error
+        if os.path.exists(temp_list_path):
+            os.remove(temp_list_path)
+        return jsonify({'error': str(e)}), 500
+
 if __name__ == '__main__':
     # Open browser automatically
     threading.Timer(1.5, lambda: subprocess.run(['start', 'http://127.0.0.1:5000'], shell=True)).start()

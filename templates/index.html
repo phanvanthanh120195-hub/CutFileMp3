@@ -14,79 +14,145 @@
 <body>
     <div class="app-container">
         <header>
-            <h1>CutFileMp3</h1>
+            <h1>CutJoinFileMp3</h1>
             <p>Advanced Audio Segmentation Tool</p>
         </header>
 
+        <!-- Tab Navigation -->
+        <div class="tab-navigation">
+            <button class="tab-btn active" data-tab="split">Split MP3</button>
+            <button class="tab-btn" data-tab="join">Join MP3</button>
+        </div>
+
         <main>
-            <!-- Step 1: File Selection -->
-            <section class="card" id="file-section">
-                <h2>1. Select Input File</h2>
-                <div class="input-group">
-                    <input type="text" id="input-file-path" placeholder="Select MP3 file..." readonly>
-                    <button id="browse-file-btn" class="btn secondary">Browse</button>
-                </div>
-                <div id="file-info" class="info-text hidden">Duration: <span id="file-duration">00:00:00</span></div>
-            </section>
-
-            <!-- Step 2: Configuration -->
-            <section class="card" id="config-section">
-                <h2>2. Configuration</h2>
-                <div class="config-row">
-                    <div class="input-wrapper">
-                        <label>Segment Length (HH:MM:SS or seconds)</label>
-                        <input type="text" id="segment-length" placeholder="00:00:00" value="02:00:00">
+            <!-- Split MP3 Tab -->
+            <div class="tab-content active" id="split-tab">
+                <!-- Step 1: File Selection -->
+                <section class="card" id="file-section">
+                    <h2>1. Select Input File</h2>
+                    <div class="input-group">
+                        <input type="text" id="input-file-path" placeholder="Select MP3 file..." readonly>
+                        <button id="browse-file-btn" class="btn secondary">Browse</button>
                     </div>
-                    <div class="checkbox-wrapper">
-                        <input type="checkbox" id="keep-locked-cb" checked>
-                        <label for="keep-locked-cb">Keep Locked</label>
+                    <div id="file-info" class="info-text hidden">Duration: <span id="file-duration">00:00:00</span>
                     </div>
-                    <button id="generate-segments-btn" class="btn primary" disabled>Apply / Reset</button>
-                </div>
-            </section>
+                </section>
 
-            <!-- Step 3: Segments Editor -->
-            <section class="card full-height" id="editor-section">
-                <div class="section-header">
-                    <h2>3. Segments</h2>
-                    <div class="actions">
-                        <button id="add-segment-btn" class="btn small">Add Segment</button>
-                        <button id="clear-segments-btn" class="btn small danger">Clear All</button>
+                <!-- Step 2: Configuration -->
+                <section class="card" id="config-section">
+                    <h2>2. Configuration</h2>
+                    <div class="config-row">
+                        <div class="input-wrapper">
+                            <label>Segment Length (HH:MM:SS or seconds)</label>
+                            <input type="text" id="segment-length" placeholder="00:00:00" value="02:00:00">
+                        </div>
+                        <div class="checkbox-wrapper">
+                            <input type="checkbox" id="keep-locked-cb" checked>
+                            <label for="keep-locked-cb">Keep Locked</label>
+                        </div>
+                        <button id="generate-segments-btn" class="btn primary" disabled>Apply / Reset</button>
                     </div>
-                </div>
+                </section>
 
-                <div class="segments-header">
-                    <span class="col-idx">#</span>
-                    <span class="col-time">Start</span>
-                    <span class="col-shift">Shift (min)</span>
-                    <span class="col-shift-s">Shift (s)</span>
-                    <span class="col-time">End</span>
-                    <span class="col-lock">Lock</span>
+                <!-- Step 3: Segments Editor -->
+                <section class="card full-height" id="editor-section">
+                    <div class="section-header">
+                        <h2>3. Segments</h2>
+                        <div class="actions">
+                            <button id="add-segment-btn" class="btn small">Add Segment</button>
+                            <button id="clear-segments-btn" class="btn small danger">Clear All</button>
+                        </div>
+                    </div>
 
-                    <span class="col-duration">Duration</span>
-                    <span class="col-name">Output Name</span>
-                    <span class="col-del"></span>
-                </div>
-                <div id="segments-list" class="segments-list">
-                    <!-- Segments will be injected here -->
-                    <div class="empty-state">No segments generated yet.</div>
-                </div>
-            </section>
+                    <div class="segments-header">
+                        <span class="col-idx">#</span>
+                        <span class="col-time">Start</span>
+                        <span class="col-shift">Shift (min)</span>
+                        <span class="col-shift-s">Shift (s)</span>
+                        <span class="col-time">End</span>
+                        <span class="col-lock">Lock</span>
 
-            <!-- Step 4: Output & Export -->
-            <section class="card" id="export-section">
-                <h2>4. Export</h2>
-                <div class="input-group">
-                    <input type="text" id="output-folder-path" placeholder="Select output folder..." readonly>
-                    <button id="browse-folder-btn" class="btn secondary">Browse</button>
-                </div>
-                <div class="export-actions">
+                        <span class="col-duration">Duration</span>
+                        <span class="col-name">Output Name</span>
+                        <span class="col-del"></span>
+                    </div>
+                    <div id="segments-list" class="segments-list">
+                        <!-- Segments will be injected here -->
+                        <div class="empty-state">No segments generated yet.</div>
+                    </div>
+                </section>
 
-                    <button id="export-zip-btn" class="btn secondary big" disabled>Download ZIP</button>
-                    <button id="export-btn" class="btn success big" disabled>Export & Cut Files</button>
-                </div>
-                <div id="export-status" class="status-text"></div>
-            </section>
+                <!-- Step 4: Output & Export -->
+                <section class="card" id="export-section">
+                    <h2>4. Export</h2>
+                    <div class="input-group">
+                        <input type="text" id="output-folder-path" placeholder="Select output folder..." readonly>
+                        <button id="browse-folder-btn" class="btn secondary">Browse</button>
+                    </div>
+                    <div class="export-actions">
+
+                        <button id="export-zip-btn" class="btn secondary big" disabled>Download ZIP</button>
+                        <button id="export-btn" class="btn success big" disabled>Export & Cut Files</button>
+                    </div>
+                    <div id="export-status" class="status-text"></div>
+                </section>
+            </div>
+            <!-- End Split MP3 Tab -->
+
+            <!-- Join MP3 Tab -->
+            <div class="tab-content" id="join-tab">
+                <!-- Step 1: Select Input Folder -->
+                <section class="card" id="join-input-section">
+                    <h2>1. Select Input Folder</h2>
+                    <div class="input-group">
+                        <input type="text" id="join-input-folder-path"
+                            placeholder="Select folder containing MP3 files..." readonly>
+                        <button id="join-browse-folder-btn" class="btn secondary">Browse</button>
+                    </div>
+                    <div id="join-file-count" class="info-text hidden">Found: <span id="join-file-count-value">0</span>
+                        MP3 files</div>
+                </section>
+
+                <!-- Step 2: File List & Reorder -->
+                <section class="card full-height" id="join-files-section">
+                    <div class="section-header">
+                        <h2>2. Files to Join</h2>
+                        <div class="actions">
+                            <button id="join-refresh-btn" class="btn small">Refresh</button>
+                        </div>
+                    </div>
+
+                    <div class="join-files-header">
+                        <span class="col-order">#</span>
+                        <span class="col-filename">Filename</span>
+                        <span class="col-duration">Duration</span>
+                        <span class="col-size">Size</span>
+                        <span class="col-actions">Actions</span>
+                        <span class="col-delete"></span>
+                    </div>
+                    <div id="join-files-list" class="join-files-list">
+                        <div class="empty-state">No folder selected yet.</div>
+                    </div>
+                </section>
+
+                <!-- Step 3: Output & Join -->
+                <section class="card" id="join-output-section">
+                    <h2>3. Output</h2>
+                    <div class="input-group">
+                        <input type="text" id="join-output-folder-path" placeholder="Select output folder..." readonly>
+                        <button id="join-browse-output-btn" class="btn secondary">Browse</button>
+                    </div>
+                    <div class="input-group" style="margin-top: 1rem;">
+                        <input type="text" id="join-output-filename" placeholder="Output filename (without .mp3)"
+                            value="joined_output">
+                    </div>
+                    <div class="export-actions">
+                        <button id="join-execute-btn" class="btn success big" disabled>Join Files</button>
+                    </div>
+                    <div id="join-status" class="status-text"></div>
+                </section>
+            </div>
+            <!-- End Join MP3 Tab -->
         </main>
     </div>
 

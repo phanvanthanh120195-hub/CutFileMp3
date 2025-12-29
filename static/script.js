@@ -543,3 +543,274 @@ async function exportSegments(createZip) {
         checkExportReady();
     }
 }
+
+// ============================================
+// JOIN MP3 FUNCTIONALITY
+// ============================================
+
+let joinState = {
+    inputFolder: null,
+    outputFolder: null,
+    files: []
+};
+
+// Join DOM Elements
+const joinEls = {
+    inputFolderPath: document.getElementById('join-input-folder-path'),
+    browseFolderBtn: document.getElementById('join-browse-folder-btn'),
+    fileCount: document.getElementById('join-file-count'),
+    fileCountValue: document.getElementById('join-file-count-value'),
+    filesList: document.getElementById('join-files-list'),
+    refreshBtn: document.getElementById('join-refresh-btn'),
+    outputFolderPath: document.getElementById('join-output-folder-path'),
+    browseOutputBtn: document.getElementById('join-browse-output-btn'),
+    outputFilename: document.getElementById('join-output-filename'),
+    executeBtn: document.getElementById('join-execute-btn'),
+    status: document.getElementById('join-status')
+};
+
+// Tab Navigation
+document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+        const targetTab = btn.dataset.tab;
+
+        // Update tab buttons
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+
+        // Update tab content
+        document.querySelectorAll('.tab-content').forEach(content => {
+            content.classList.remove('active');
+        });
+        document.getElementById(`${targetTab}-tab`).classList.add('active');
+    });
+});
+
+// Join Event Listeners
+joinEls.browseFolderBtn.addEventListener('click', async () => {
+    const res = await fetch('/api/browse-folder');
+    const data = await res.json();
+    if (data.path) {
+        joinState.inputFolder = data.path;
+        joinEls.inputFolderPath.value = joinState.inputFolder;
+        await loadJoinFiles();
+    }
+});
+
+joinEls.browseOutputBtn.addEventListener('click', async () => {
+    const res = await fetch('/api/browse-folder');
+    const data = await res.json();
+    if (data.path) {
+        joinState.outputFolder = data.path;
+        joinEls.outputFolderPath.value = joinState.outputFolder;
+        checkJoinReady();
+    }
+});
+
+joinEls.refreshBtn.addEventListener('click', loadJoinFiles);
+joinEls.executeBtn.addEventListener('click', executeJoin);
+
+async function loadJoinFiles() {
+    if (!joinState.inputFolder) return;
+
+    try {
+        const res = await fetch('/api/list-mp3-files', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ folderPath: joinState.inputFolder })
+        });
+        const data = await res.json();
+
+        if (data.error) {
+            alert('Error loading files: ' + data.error);
+            return;
+        }
+
+        joinState.files = data.files;
+        joinEls.fileCountValue.textContent = joinState.files.length;
+        joinEls.fileCount.classList.remove('hidden');
+
+        renderJoinFiles();
+        checkJoinReady();
+    } catch (err) {
+        console.error(err);
+        alert('Error loading files');
+    }
+}
+
+function renderJoinFiles() {
+    joinEls.filesList.innerHTML = '';
+
+    if (joinState.files.length === 0) {
+        joinEls.filesList.innerHTML = '<div class="empty-state">No MP3 files found in this folder.</div>';
+        return;
+    }
+
+    joinState.files.forEach((file, index) => {
+        const row = document.createElement('div');
+        row.className = 'join-file-row';
+        row.draggable = true;
+        row.dataset.index = index;
+
+        const sizeKB = (file.size / 1024).toFixed(2);
+        const sizeMB = (file.size / (1024 * 1024)).toFixed(2);
+        const sizeDisplay = file.size > 1024 * 1024 ? `${sizeMB} MB` : `${sizeKB} KB`;
+
+        row.innerHTML = `
+            <div class="col-order">${index + 1}</div>
+            <div class="col-filename" title="${file.filename}">${file.filename}</div>
+            <div class="col-duration">${formatTime(file.duration)}</div>
+            <div class="col-size">${sizeDisplay}</div>
+            <div class="col-actions">
+                <button class="reorder-btn up-btn" data-index="${index}" ${index === 0 ? 'disabled' : ''}>▲</button>
+                <button class="reorder-btn down-btn" data-index="${index}" ${index === joinState.files.length - 1 ? 'disabled' : ''}>▼</button>
+            </div>
+            <button class="delete-file-btn" data-index="${index}">×</button>
+        `;
+
+        // Drag and drop events
+        row.addEventListener('dragstart', handleDragStart);
+        row.addEventListener('dragover', handleDragOver);
+        row.addEventListener('drop', handleDrop);
+        row.addEventListener('dragend', handleDragEnd);
+
+        joinEls.filesList.appendChild(row);
+    });
+
+    // Attach reorder button listeners
+    document.querySelectorAll('.up-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            const index = parseInt(e.target.dataset.index);
+            moveFile(index, index - 1);
+        });
+    });
+
+    document.querySelectorAll('.down-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            const index = parseInt(e.target.dataset.index);
+            moveFile(index, index + 1);
+        });
+    });
+
+    // Attach delete button listeners
+    document.querySelectorAll('.delete-file-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            const index = parseInt(e.target.dataset.index);
+            deleteFile(index);
+        });
+    });
+}
+
+let draggedIndex = null;
+
+function handleDragStart(e) {
+    draggedIndex = parseInt(e.target.dataset.index);
+    e.target.classList.add('dragging');
+}
+
+function handleDragOver(e) {
+    e.preventDefault();
+}
+
+function handleDrop(e) {
+    e.preventDefault();
+    const dropIndex = parseInt(e.target.closest('.join-file-row').dataset.index);
+
+    if (draggedIndex !== null && draggedIndex !== dropIndex) {
+        moveFile(draggedIndex, dropIndex);
+    }
+}
+
+function handleDragEnd(e) {
+    e.target.classList.remove('dragging');
+    draggedIndex = null;
+}
+
+function moveFile(fromIndex, toIndex) {
+    if (fromIndex < 0 || fromIndex >= joinState.files.length) return;
+    if (toIndex < 0 || toIndex >= joinState.files.length) return;
+
+    const [movedFile] = joinState.files.splice(fromIndex, 1);
+    joinState.files.splice(toIndex, 0, movedFile);
+
+    renderJoinFiles();
+}
+
+function deleteFile(index) {
+    if (index < 0 || index >= joinState.files.length) return;
+
+    const fileName = joinState.files[index].filename;
+    if (confirm(`Bạn có chắc muốn xóa "${fileName}" khỏi danh sách?`)) {
+        joinState.files.splice(index, 1);
+        joinEls.fileCountValue.textContent = joinState.files.length;
+        renderJoinFiles();
+        checkJoinReady();
+    }
+}
+
+function checkJoinReady() {
+    const ready = joinState.files.length > 0 && joinState.outputFolder && joinEls.outputFilename.value.trim();
+    joinEls.executeBtn.disabled = !ready;
+}
+
+joinEls.outputFilename.addEventListener('input', checkJoinReady);
+
+async function executeJoin() {
+    if (joinState.files.length === 0) {
+        alert('No files to join');
+        return;
+    }
+
+    if (!joinState.outputFolder) {
+        alert('Please select an output folder');
+        return;
+    }
+
+    const filename = joinEls.outputFilename.value.trim();
+    if (!filename) {
+        alert('Please enter an output filename');
+        return;
+    }
+
+    joinEls.executeBtn.disabled = true;
+    joinEls.status.textContent = 'Joining files...';
+    joinEls.status.style.backgroundColor = 'rgba(59, 130, 246, 0.1)';
+    joinEls.status.style.color = 'var(--accent-color)';
+
+    try {
+        const filePaths = joinState.files.map(f => f.path);
+        const outputPath = `${joinState.outputFolder}\\${filename}`;
+
+        const res = await fetch('/api/join-mp3', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                filePaths: filePaths,
+                outputPath: outputPath
+            })
+        });
+
+        const data = await res.json();
+
+        if (data.success) {
+            joinEls.status.textContent = `✓ ${data.message}`;
+            joinEls.status.style.backgroundColor = 'rgba(34, 197, 94, 0.1)';
+            joinEls.status.style.color = 'var(--success-color)';
+            alert(`Success! File saved to:\n${data.outputPath}`);
+        } else {
+            joinEls.status.textContent = `✗ Error: ${data.error}`;
+            joinEls.status.style.backgroundColor = 'rgba(239, 68, 68, 0.1)';
+            joinEls.status.style.color = 'var(--danger-color)';
+            alert('Error: ' + data.error);
+        }
+    } catch (err) {
+        console.error(err);
+        joinEls.status.textContent = `✗ Error: ${err.message}`;
+        joinEls.status.style.backgroundColor = 'rgba(239, 68, 68, 0.1)';
+        joinEls.status.style.color = 'var(--danger-color)';
+        alert('Error joining files: ' + err.message);
+    } finally {
+        checkJoinReady();
+    }
+}
+
