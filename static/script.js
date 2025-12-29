@@ -39,6 +39,12 @@ function parseTime(timeStr) {
     return parts[0] * 3600 + parts[1] * 60 + parts[2];
 }
 
+function getBaseFilename() {
+    if (!state.filePath) return 'output';
+    const filename = state.filePath.split(/[/\\]/).pop(); // Get filename from path
+    return filename.replace(/\.[^/.]+$/, ''); // Remove extension
+}
+
 function getSegmentLength() {
     const val = els.segmentLength.value.trim();
     if (val.includes(':')) {
@@ -129,7 +135,7 @@ function generateSegments(isReset) {
                 start: t,
                 end: nextEnd,
                 locked: false,
-                outputName: `segment_${segmentIdx.toString().padStart(2, '0')}`
+                outputName: `part_${segmentIdx}_${getBaseFilename()}`
             });
             t = nextEnd;
             segmentIdx++;
@@ -171,7 +177,7 @@ function generateSegments(isReset) {
     let idx = 1;
     newSegments.forEach(seg => {
         if (!seg.locked) {
-            seg.outputName = `segment_${idx.toString().padStart(2, '0')}`;
+            seg.outputName = `part_${idx}_${getBaseFilename()}`;
         }
         idx++;
     });
@@ -190,7 +196,7 @@ function addSegment() {
         start: start,
         end: end,
         locked: false,
-        outputName: `segment_auto` // Temp, will be renumbered
+        outputName: `part_auto_${getBaseFilename()}` // Temp, will be renumbered
     });
     renumberSegments();
     renderSegments();
@@ -461,7 +467,7 @@ function cascadeFrom(idx) {
             start: t,
             end: nextEnd,
             locked: false,
-            outputName: `segment_auto_${Date.now().toString().slice(-4)}` // Temp name
+            outputName: `part_auto_${getBaseFilename()}` // Temp name
         });
         t = nextEnd;
     }
@@ -488,7 +494,7 @@ function renumberSegments() {
             // The constraint "segment_auto_..." suggests we should only target those or target all unlocked.
             // Let's target all unlocked to force the "stt index" pattern the user wants.
 
-            seg.outputName = `segment_${autoIdx.toString().padStart(2, '0')}`;
+            seg.outputName = `part_${autoIdx}_${getBaseFilename()}`;
         }
         autoIdx++;
     });
