@@ -11,7 +11,7 @@ app = Flask(__name__)
 
 # Configuration
 UPLOAD_FOLDER = 'uploads'
-OUTPUT_FOLDER = 'output'
+OUTPUT_FOLDER = 'Output'
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 os.makedirs(OUTPUT_FOLDER, exist_ok=True)
 
@@ -62,6 +62,12 @@ def browse_folder():
     if folder_path:
         return jsonify({'path': folder_path})
     return jsonify({'path': None})
+
+@app.route('/api/get-output-folder')
+def get_output_folder():
+    """Return the path to the project's Output folder"""
+    output_path = os.path.abspath(OUTPUT_FOLDER)
+    return jsonify({'path': output_path})
 
 @app.route('/api/file-info', methods=['POST'])
 def file_info():

@@ -560,6 +560,24 @@ let joinState = {
     files: []
 };
 
+// Automatically set output folder to project's Output directory on page load
+window.addEventListener('DOMContentLoaded', async () => {
+    try {
+        // Get the project's Output folder path
+        const res = await fetch('/api/get-output-folder');
+        const data = await res.json();
+        if (data.path) {
+            joinState.outputFolder = data.path;
+            if (joinEls.outputFolderPath) {
+                joinEls.outputFolderPath.value = joinState.outputFolder;
+            }
+            checkJoinReady();
+        }
+    } catch (err) {
+        console.error('Error setting default output folder:', err);
+    }
+});
+
 // Join DOM Elements
 const joinEls = {
     inputFolderPath: document.getElementById('join-input-folder-path'),
@@ -649,10 +667,19 @@ function renderJoinFiles() {
 
     if (joinState.files.length === 0) {
         joinEls.filesList.innerHTML = '<div class="empty-state">No MP3 files found in this folder.</div>';
+        // Hide total section when no files
+        document.getElementById('join-total-section').style.display = 'none';
         return;
     }
 
+    // Calculate totals
+    let totalDuration = 0;
+    let totalSize = 0;
+
     joinState.files.forEach((file, index) => {
+        totalDuration += file.duration;
+        totalSize += file.size;
+
         const row = document.createElement('div');
         row.className = 'join-file-row';
         row.draggable = true;
@@ -682,6 +709,22 @@ function renderJoinFiles() {
 
         joinEls.filesList.appendChild(row);
     });
+
+    // Update total information section
+    const totalSizeMB = (totalSize / (1024 * 1024)).toFixed(2);
+    const totalSizeDisplay = totalSize > 1024 * 1024 ? `${totalSizeMB} MB` : `${(totalSize / 1024).toFixed(2)} KB`;
+
+    document.getElementById('join-total-files').textContent = joinState.files.length;
+
+    // Calculate total minutes (round up if there are seconds)
+    const totalMinutes = Math.ceil(totalDuration / 60);
+    const durationDisplay = `${formatTime(totalDuration)} - ${totalMinutes} phút`;
+    document.getElementById('join-total-duration').textContent = durationDisplay;
+
+    document.getElementById('join-total-size').textContent = totalSizeDisplay;
+
+    // Show total section
+    document.getElementById('join-total-section').style.display = 'block';
 
     // Attach reorder button listeners
     document.querySelectorAll('.up-btn').forEach(btn => {

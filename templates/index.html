@@ -135,6 +135,24 @@
                     </div>
                 </section>
 
+                <!-- Total Information Section -->
+                <section class="card" id="join-total-section" style="display: none;">
+                    <div class="total-info-container">
+                        <div class="total-info-item">
+                            <span class="total-label">📁 Total Files:</span>
+                            <span class="total-value" id="join-total-files">0</span>
+                        </div>
+                        <div class="total-info-item">
+                            <span class="total-label">⏱️ Total Duration:</span>
+                            <span class="total-value" id="join-total-duration">00:00:00</span>
+                        </div>
+                        <div class="total-info-item">
+                            <span class="total-label">💾 Total Size:</span>
+                            <span class="total-value" id="join-total-size">0 MB</span>
+                        </div>
+                    </div>
+                </section>
+
                 <!-- Step 3: Output & Join -->
                 <section class="card" id="join-output-section">
                     <h2>3. Output</h2>
@@ -143,8 +161,8 @@
                         <button id="join-browse-output-btn" class="btn secondary">Browse</button>
                     </div>
                     <div class="input-group" style="margin-top: 1rem;">
-                        <input type="text" id="join-output-filename" placeholder="Output filename (without .mp3)"
-                            value="joined_output">
+                        <input type="text" style="width: 100% !important;" id="join-output-filename"
+                            placeholder="Output filename (without .mp3)" value="joined_output">
                     </div>
                     <div class="export-actions">
                         <button id="join-execute-btn" class="btn success big" disabled>Join Files</button>
