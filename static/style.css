@@ -391,7 +391,7 @@ audio {
 /* Join Files List */
 .join-files-header {
     display: grid;
-    grid-template-columns: 50px 1fr 120px 100px 150px 40px;
+    grid-template-columns: 50px 1fr 180px 100px 150px 40px;
     gap: 1rem;
     padding: 0.75rem 1rem;
     background-color: rgba(0, 0, 0, 0.2);
@@ -409,9 +409,9 @@ audio {
 
 .join-file-row {
     display: grid;
-    grid-template-columns: 50px 1fr 120px 100px 150px 40px;
+    grid-template-columns: 50px 1fr 180px 100px 150px 40px;
     gap: 1rem;
-    padding: 0.75rem 1rem;
+    padding: 1.25rem 1rem;
     background-color: var(--input-bg);
     border: 1px solid var(--border-color);
     border-radius: 8px;

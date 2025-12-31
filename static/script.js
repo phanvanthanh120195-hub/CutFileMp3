@@ -692,7 +692,7 @@ function renderJoinFiles() {
         row.innerHTML = `
             <div class="col-order">${index + 1}</div>
             <div class="col-filename" title="${file.filename}">${file.filename}</div>
-            <div class="col-duration">${formatTime(file.duration)}</div>
+            <div class="col-duration">${formatTime(file.duration)} - ${Math.ceil(file.duration / 60)} phút</div>
             <div class="col-size">${sizeDisplay}</div>
             <div class="col-actions">
                 <button class="reorder-btn up-btn" data-index="${index}" ${index === 0 ? 'disabled' : ''}>▲</button>
